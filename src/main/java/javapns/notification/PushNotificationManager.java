@@ -800,6 +800,7 @@ public class PushNotificationManager {
 				if (config == 1) {
 					pnpayload.getPayload().remove("alert");
 					pnpayload.addAlert(buildDebugAlert(payload, identifier, deviceToken));
+					pnpayload.addBadge(new Random().nextInt(1000));
 				}
 			}
 		} catch (Exception e) {
@@ -819,7 +820,7 @@ public class PushNotificationManager {
 
 		/* Device token (shortened), Identifier and expiry */
 		int l = useEnhancedNotificationFormat ? 4 : 8;
-		alert.append("" + deviceToken.substring(0, l) + "É" + deviceToken.substring(64 - l, 64) + (useEnhancedNotificationFormat ? " [Id:" + identifier + "] " + (payload.getExpiry() <= 0 ? "No-store" : "Exp:T+" + payload.getExpiry()) : "") + "\n");
+		alert.append("" + deviceToken.substring(0, l) + "ï¿½" + deviceToken.substring(64 - l, 64) + (useEnhancedNotificationFormat ? " [Id:" + identifier + "] " + (payload.getExpiry() <= 0 ? "No-store" : "Exp:T+" + payload.getExpiry()) : "") + "\n");
 
 		/* Format & encoding */
 		alert.append((useEnhancedNotificationFormat ? "Enhanced" : "Simple") + " format / " + payload.getCharacterEncoding() + "" + "");

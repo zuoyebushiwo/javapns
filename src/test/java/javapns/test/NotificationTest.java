@@ -1,14 +1,29 @@
 package javapns.test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-import javapns.*;
-import javapns.communication.exceptions.*;
-import javapns.devices.*;
-import javapns.devices.implementations.basic.*;
-import javapns.json.*;
-import javapns.notification.*;
-import javapns.notification.transmission.*;
+import javapns.Push;
+import javapns.communication.exceptions.CommunicationException;
+import javapns.communication.exceptions.KeystoreException;
+import javapns.devices.Device;
+import javapns.devices.implementations.basic.BasicDevice;
+import javapns.json.JSONException;
+import javapns.notification.AppleNotificationServer;
+import javapns.notification.AppleNotificationServerBasicImpl;
+import javapns.notification.Payload;
+import javapns.notification.PushNotificationPayload;
+import javapns.notification.PushedNotification;
+import javapns.notification.transmission.NotificationProgressListener;
+import javapns.notification.transmission.NotificationThread;
+import javapns.notification.transmission.NotificationThreads;
+
+import com.ejiahe.eim.apnsPush.ApnsPushProvider;
+import com.ejiahe.eim.apnsPush.ApnsPushProviderImpl;
+import com.ejiahe.eim.apnsPush.PushCertificate;
+import com.ejiahe.eim.apnsPush.PushClient.PushType;
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
 
 /**
@@ -27,6 +42,38 @@ import javapns.notification.transmission.*;
  * @author Sylvain Pedneault
  */
 public class NotificationTest extends TestFoundation {
+	
+	private static String[] initParams() {
+		MysqlDataSource dataSourceAdaptor = new MysqlDataSource();
+		dataSourceAdaptor.setUser("root");
+		dataSourceAdaptor.setPassword("1111");
+		dataSourceAdaptor
+				.setUrl("jdbc:mysql://127.0.0.1:3306/myeim?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=UTF-8&characterSetResults=UTF-8");
+		;
+		ApnsPushProvider provider = new ApnsPushProviderImpl(dataSourceAdaptor);
+
+		Collection<PushCertificate> pushCertificates = provider
+				.getPushCertificates(true, 0, 0);
+
+		PushCertificate pushCertificate = null;
+		for (PushCertificate temp : pushCertificates) {
+			if (temp.getAppId().equals("com.ejiahe.dyqx")
+					&& temp.getType().equals(PushType.apnsDev)) {
+				pushCertificate = temp;
+				break;
+			}
+		}
+		
+		String[] result = new String[7];
+		result[0] = "E:\\Google\\2015-04\\javapns-master\\src\\test\\java\\javapns\\test\\com.ejiahe.dyqx.dev.p12";
+		result[1] = pushCertificate.getPassword();
+		result[2] = "641e8ba10e12316e6596ec80200479eabc07c6957ae01539bb631d74ef8e85d3";
+		result[3] = "a";
+		result[4] = "threads";
+		result[5] = "1000";
+		result[6] = "20";
+		return result;
+	}
 
 	/**
 	 * Execute this class from the command line to run tests.
@@ -34,6 +81,8 @@ public class NotificationTest extends TestFoundation {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		args = initParams();
 
 		/* Verify that the test is being invoked  */
 		if (!verifyCorrectUsage(NotificationTest.class, args, "keystore-path", "keystore-password", "device-token", "[production|sandbox]", "[complex|simple|threads]", "[#devices]", "[#threads]")) return;
@@ -153,7 +202,7 @@ public class NotificationTest extends TestFoundation {
 
 			System.out.println("Creating " + threads + " notification threads");
 			NotificationThreads work = new NotificationThreads(server, simulation ? payload.asSimulationOnly() : payload, deviceList, threads);
-			//work.setMaxNotificationsPerConnection(10000);
+//			work.setMaxNotificationsPerConnection(10000);
 			System.out.println("Linking notification work debugging listener");
 			work.setListener(DEBUGGING_PROGRESS_LISTENER);
 
@@ -165,7 +214,7 @@ public class NotificationTest extends TestFoundation {
 			long timestamp2 = System.currentTimeMillis();
 			System.out.println("All threads finished in " + (timestamp2 - timestamp1) + " milliseconds");
 
-			printPushedNotifications(work.getPushedNotifications(true));
+//			printPushedNotifications(work.getPushedNotifications(true));
 
 		} catch (Exception e) {
 			e.printStackTrace();
